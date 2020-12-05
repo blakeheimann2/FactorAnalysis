@@ -36,11 +36,12 @@ def PortfolioFactorReg(df_stk):
     # Reading in factor data
     df_factors = web.DataReader('F-F_Research_Data_5_Factors_2x3_daily', 'famafrench')[0]
     df_factors.rename(columns={'Mkt-RF': 'MKT'}, inplace=True)
-    df_factors['MKT'] = df_factors['MKT'] / 100
-    df_factors['SMB'] = df_factors['SMB'] / 100
-    df_factors['HML'] = df_factors['HML'] / 100
-    df_factors['RMW'] = df_factors['RMW'] / 100
-    df_factors['CMA'] = df_factors['CMA'] / 100
+    #Convert PCT Returns back to log returns
+    df_factors['MKT'] = np.log(df_factors['MKT']/100 + 1) #equiv of np.log(FV/PV)
+    df_factors['SMB'] = np.log(df_factors['SMB']/100 + 1)
+    df_factors['HML'] = np.log(df_factors['HML']/100 + 1)
+    df_factors['RMW'] = np.log(df_factors['RMW']/100 + 1)
+    df_factors['CMA'] = np.log(df_factors['CMA']/100 + 1)
     df_stk.name = "Returns"
     df_stock_factor = pd.concat([df_stk, df_factors], axis=1).dropna()  # Merging the stock and factor returns dataframes together
     df_stock_factor['XsRet'] = df_stock_factor['Returns'] - df_stock_factor['RF']  # Calculating excess returns
@@ -70,7 +71,7 @@ def PortfolioFactorReg(df_stk):
                            info_dict={'N': lambda x: "{0:d}".format(int(x.nobs)),
                                       'Adjusted R2': lambda x: "{:.4f}".format(x.rsquared_adj)},
                            regressor_order=['Intercept', 'MKT', 'SMB', 'HML', 'RMW', 'CMA'])
-
+    print("MKT Cummulative Returns: {}".format(df_factors['MKT'].sum()))
     print(dfoutput)
 
     return results_df

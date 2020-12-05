@@ -16,6 +16,7 @@ def main():
     portfolioReturns = portfolio.dropna().apply(calcLogReturns, axis =0)
     myPortfolioReturns = np.sum(portfolioReturns * list(equalWeightPortfolio.values()), axis=1)
     PortfolioFactorReg(myPortfolioReturns)
+    print("My Portfolio Cummulative Returns: {}".format(myPortfolioReturns.sum()))
 
 if __name__ == "__main__":
     main()
