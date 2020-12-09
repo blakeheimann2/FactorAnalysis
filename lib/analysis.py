@@ -44,8 +44,10 @@ def PortfolioFactorReg(df_stk):
     df_factors['CMA'] = np.log(df_factors['CMA']/100 + 1)
     df_stk.name = "Returns"
     df_stock_factor = pd.concat([df_stk, df_factors], axis=1).dropna()  # Merging the stock and factor returns dataframes together
-    df_stock_factor['XsRet'] = df_stock_factor['Returns'] - df_stock_factor['RF']  # Calculating excess returns
+    print("Factor Regression Start: {}".format(df_stock_factor.index[0]))
+    print("Factor Regression End: {}".format(df_stock_factor.index[-1]))
 
+    df_stock_factor['XsRet'] = df_stock_factor['Returns'] - df_stock_factor['RF']  # Calculating excess returns
     # Running CAPM, FF3, and FF5 models.
     CAPM = sm.ols(formula='XsRet ~ MKT', data=df_stock_factor).fit(cov_type='HAC', cov_kwds={'maxlags': 1})
     FF3 = sm.ols(formula='XsRet ~ MKT + SMB + HML', data=df_stock_factor).fit(cov_type='HAC', cov_kwds={'maxlags': 1})
@@ -75,4 +77,24 @@ def PortfolioFactorReg(df_stk):
     print(dfoutput)
 
     return results_df
+
+import statsmodels.api as sm
+from sklearn.base import BaseEstimator, RegressorMixin
+
+class SMWrapper(BaseEstimator, RegressorMixin):
+    """ A universal sklearn-style wrapper for statsmodels regressors """
+    def __init__(self, model_class, fit_intercept=True):
+        self.model_class = model_class
+        self.fit_intercept = fit_intercept
+    def fit(self, X, y):
+        if self.fit_intercept:
+            X = sm.add_constant(X)
+        self.model_ = self.model_class(y, X)
+        self.results_ = self.model_.fit()
+    def predict(self, X):
+        if self.fit_intercept:
+            X = sm.add_constant(X)
+        return self.results_.predict(X)
+    def summary(self):
+        return self.results_.summary()
 
